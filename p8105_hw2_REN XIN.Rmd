@@ -1,0 +1,65 @@
+---
+title: "P8105_hw1_REN XIN"
+output: github_document
+date: "2022-09-23"
+---
+```{r}
+library(tidyverse)
+```
+
+
+Problem 1:
+
+```{r}
+library(palmerpenguins)
+data("penguins", package = "palmerpenguins")
+```
+```{r}
+penguins <- na.omit(penguins)
+```
+
+```{r}
+nrow(penguins)
+ncol(penguins)
+mean(pull(penguins,flipper_length_mm))
+```
+description:
+1. The data(penguins) has 344rows(one row of NA) and 8 columns.
+2. The flipper length is `r mean(pull(penguins,flipper_length_mm))`
+3. The data including 8 columns, which are species, island, bill_length_mm,bill_depth_mm,flipper_length_mm,body_mass_g, sex and year.
+```{r}
+scatterplot_df=
+  tibble( 
+    bill_length_mm = pull(penguins,bill_length_mm),
+    flipper_length_mm = pull(penguins,flipper_length_mm)
+  )
+ggplot(scatterplot_df, aes(x= bill_length_mm,y= flipper_length_mm))+geom_point (aes(color=pull(penguins, species)))
+ggsave("scatterplot of p8105_hw1_RX.pdf")
+```
+
+Problem 2:
+
+```{r}
+df=tibble(
+   norm_nb = rnorm(10),
+   norm_logical = norm_nb>0,
+   norm_character = as.character(norm_nb),
+   df_factor=factor(c("10","15","20","10","15","20","10","15","20","10"),levels = c("10","15","20"))
+)
+```
+
+The norm_nb's mean is `r mean(pull(df,norm_nb))`
+The norm_logical's mean is `r mean(pull(df,norm_logical))`
+The norm_character's mean is `r mean(pull(df,norm_character))`
+The df_factor's mean is `r mean(pull(df,df_factor))`
+
+```{r}
+as.numeric(df$norm_character)
+as.numeric(df$df_factor)
+```
+
+Now,The norm_character’s mean is NA The df_factor’s mean is NA,So,
+The norm_character's mean is `r mean(as.numeric(df$norm_character))`
+The df_factor's mean is `r mean(as.numeric(df$df_factor))`
+
+
