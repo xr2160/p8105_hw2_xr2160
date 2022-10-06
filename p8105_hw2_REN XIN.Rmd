@@ -5,61 +5,179 @@ date: "2022-09-23"
 ---
 ```{r}
 library(tidyverse)
+library(readxl)
+library(readr)
+library(dplyr)
 ```
 
 
-Problem 1:
-
+Problem1
 ```{r}
-library(palmerpenguins)
-data("penguins", package = "palmerpenguins")
+trans_ent = 
+  read_excel(
+    "NYC_Transit_Subway_Entrance_And_Exit_Data.xlsx")
+col_types = cols(Route8 = "c", Route9 = "c", Route10 = "c", Route11 = "c")
+trans_ent=janitor::clean_names(trans_ent)
+data_c=select(trans_ent,line,station_name,station_latitude,station_longitude,route1:route11,entry,vending,entrance_type,ada) %>% 
+  mutate(entry = ifelse(entry == "YES", TRUE, FALSE))
 ```
 ```{r}
-penguins <- na.omit(penguins)
+trans_ent %>% 
+  select(station_name, line) %>% 
+  distinct
+```
+```{r}
+trans_ent %>% 
+  filter(ada == TRUE) %>% 
+  select(station_name, line) %>% 
+  distinct
+```
+```{r}
+trans_ent %>% 
+  filter(vending == "NO") %>% 
+  pull(entry) 
+```
+```{r}
+trans_ent=mutate(trans_ent,route8=as.character(route8))
+trans_ent=mutate(trans_ent,route9=as.character(route9))
+trans_ent=mutate(trans_ent,route10=as.character(route10))
+trans_ent=mutate(trans_ent,route11=as.character(route11))
+trans_ent %>% 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_num",
+    values_to = "route") %>% 
+  filter(route == "A") %>% 
+  select(station_name, line) %>% 
+  distinct
+
+trans_ent %>% 
+  pivot_longer(
+    route1:route11,
+    names_to = "route_num",
+    values_to = "route") %>% 
+  filter(route == "A", ada == TRUE) %>% 
+  select(station_name, line) %>% 
+  distinct
+```
+
+
+Problem2
+```{r}
+Trash_WCD_df = 
+    read_excel("Trash Wheel Collection Data (1).xlsx",sheet = "Mr. Trash Wheel") 
+Trash_WCD_df=janitor::clean_names(Trash_WCD_df) 
+Trash_WCD_df%>%     
+drop_na(dumpster) %>% 
+    mutate(sports_balls = as.integer(round(sports_balls)),)
+Trash_WCD_df
+```
+```{r}
+Professor_TW_df = 
+    read_excel("Trash Wheel Collection Data (1).xlsx",sheet = "Professor Trash Wheel") 
+Professor_TW_df=janitor::clean_names(Professor_TW_df) 
+Professor_TW_df%>% 
+drop_na(dumpster) %>% 
+    mutate(
+      dumpster=as.character(dumpster)
+    )
+Professor_TW_df
+```
+
+
+```{r}
+Trash_WCD_df=Trash_WCD_df[,-c(15:16)]
+Trash_WCD_df=mutate(Trash_WCD_df,name=as.character("Mr. Trash Wheel"))
+Professor_TW_df=mutate(Professor_TW_df,name=as.character("Professor Trash Wheel"))
+Trash_WCD_df=mutate(Trash_WCD_df,year=as.double(year))
+Trash_Professor= bind_rows(Trash_WCD_df,Professor_TW_df)
+Trash_Professor
+```
+```{r}
+TW_trash=sum(Professor_TW_df$weight_tons[1:94])
+filter_TWCD=filter(Trash_WCD_df,year==2020)
+TN_sport=sum(filter_TWCD$sports_balls)
+TW_trash
+TN_sport
+```
+
+Description：
+   According to the data, the key variables are month,year,date weights_tons,and so on, which totally has 14 columns and 95 entries.the total weight of trash collected by Professor Trash Wheel is  ```sum(Professor_TW_df$weight_tons[1:94])```, and the total  number of sports balls collected by Mr. Trash Wheel in 2020 is ```=sum(filter_TWCD$sports_balls)```, but before we sum that, we need to select the tumber of data at 2020,and then do the sum step.
+
+Problem3
+
+```{r}
+Une=read_csv("unemployment.csv")
+pols_month=read_csv("pols-month.csv")
+S=read_csv("snp.csv")
+Une
+pols_month
+S
 ```
 
 ```{r}
-nrow(penguins)
-ncol(penguins)
-mean(pull(penguins,flipper_length_mm))
-```
-description:
-1. The data(penguins) has 344rows(one row of NA) and 8 columns.
-2. The flipper length is `r mean(pull(penguins,flipper_length_mm))`
-3. The data including 8 columns, which are species, island, bill_length_mm,bill_depth_mm,flipper_length_mm,body_mass_g, sex and year.
-```{r}
-scatterplot_df=
-  tibble( 
-    bill_length_mm = pull(penguins,bill_length_mm),
-    flipper_length_mm = pull(penguins,flipper_length_mm)
-  )
-ggplot(scatterplot_df, aes(x= bill_length_mm,y= flipper_length_mm))+geom_point (aes(color=pull(penguins, species)))
-ggsave("scatterplot of p8105_hw1_RX.pdf")
+pols_month = separate(pols_month,col=mon, into= c('year','month','day'))
+pols_month = janitor::clean_names(pols_month)
+pols_month=pols_month%>%
+  mutate(month = recode(month, "01" = "Jan", "02" = "Feb", "03"="Mar", "04"="Apr","05"="May","06"="Jun", "07"="Jul", "08"="Aug","09"="Sep","10"="Oct","11"="Nov", "12"="Dec")
+)
+pols_month=pols_month%>%
+  mutate(president=ifelse(prez_gop==1, "prez_gop",ifelse(prez_gop==0,"prez_dem","gop_2") ))
+pols_month
 ```
 
-Problem 2:
 
 ```{r}
-df=tibble(
-   norm_nb = rnorm(10),
-   norm_logical = norm_nb>0,
-   norm_character = as.character(norm_nb),
-   df_factor=factor(c("10","15","20","10","15","20","10","15","20","10"),levels = c("10","15","20"))
+pols_month=select(pols_month, -day,-prez_gop,-prez_dem)
+pols_month
+```
+
+
+```{r}
+S = separate(S,date, into= c("month","day",'year'),sep= "/")
+S=mutate(S, month = recode(month, "1" = "Jan", "2" = "Feb", "3"="Mar", "4"="Apr","5"="May","6"="Jun", "7"="Jul", "8"="Aug","9"="Sep","10"="Oct","11"="Nov", "12"="Dec")
 )
 ```
 
-The norm_nb's mean is `r mean(pull(df,norm_nb))`
-The norm_logical's mean is `r mean(pull(df,norm_logical))`
-The norm_character's mean is `r mean(pull(df,norm_character))`
-The df_factor's mean is `r mean(pull(df,df_factor))`
-
 ```{r}
-as.numeric(df$norm_character)
-as.numeric(df$df_factor)
+S=mutate(S,year=as.integer(year))
+S=mutate(S,year=as.integer(year))
+S
 ```
 
-Now,The norm_character’s mean is NA The df_factor’s mean is NA,So,
-The norm_character's mean is `r mean(as.numeric(df$norm_character))`
-The df_factor's mean is `r mean(as.numeric(df$df_factor))`
+```{r}
+A_df=pivot_longer(Une,Jan:Dec,names_to="month",values_to="amount")
+A_df=select(A_df, year=Year,month,amount)
+A_df=mutate(A_df,year=as.integer(year))
+A_df=mutate(A_df,month=as.integer(month))
+A_df
+S=mutate(S, year = ifelse(year<20,year + 2000,year + 1900)
+)
+S=arrange(S,year,month)
+S=relocate(S, year, month,close)
+S = mutate(S,year=as.character(year))
+```
+```{r}
+unemploynment = janitor::clean_names(Une)
+unemploynment = pivot_longer(unemploynment, jan:dec, names_to = "month", values_to = "amount")
+unemploynment = mutate(unemploynment,month = recode(month, 'jan'='Jan', 'feb'='Feb', 'mar'= 'Mar', 'apl'= 'Apr', 'jun' = 'Jun', 'jul'= 'Jul', 'aug'= 'Aug', 'sep' = 'Sep', 'oct'= 'Oct', 'nov' = 'Nov', 'dec' = 'Dec'))
+S=select(S,-day)
+pols_month=mutate(pols_month,year=as.double(year))
+S=mutate(S,year=as.double(year))
+```
 
+
+
+```{r}
+join_datasets = left_join(pols_month,S)
+```
+
+```{r}
+join_datasets = left_join(join_datasets,unemploynment)
+join_datasets
+```
+Description:
+1.After deal with unemployment data, which total has 816 entries, 3 columns,especially( year,month,amount),the dimension is 816x3. The range of years is from 1948 to 2015.
+2.After deal with pols_month data, which total has 822 entries, 9 columns,especially( year,month,gov_gop,sen_gop,rep_gop,gov_dem,sen_dem,rep_dem,president),the dimension is 822x9. The range of years is from 1947 to 2015.
+3.After deal with snp data, which total has 787 entries, 3 columns,especially( year,month,close),the dimension is 787x3. The range of years is from 1950 to 2015.
 
